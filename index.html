@@ -1,37 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M3U8 Stream Player</title>
 </head>
+
+<style>
+    body {
+        height: 100vh;
+        margin: 0;
+    }
+
+    .rowContainer {
+        width: 100%;
+        height: 50%;
+        display: flex;
+        flex-direction: row;
+    }
+
+    .sectionContainer {
+        width: 50%;
+        height: 100%;
+        max-height: 100%;
+
+        display: inline;
+    }
+
+    .controlContainer {
+        min-height: 22px;
+        width: 100%;
+        display: flex;
+        flex-grow: 0;
+    }
+
+    .videoContainer {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: column;
+    }
+</style>
+
 <body>
-    <h1>M3U8 Stream Player</h1>
-    <video id="video" controls width="600" height="400"></video>
+
+    <div class="rowContainer">
+        <div class="sectionContainer">
+            <div class="controlContainer">
+                <input id="streamUrlInput1"></input>
+                <button onclick="playStream(1)">Play Stream</button>
+            </div>
+            <video id="video1" controls autoplay></video>
+        </div>
+
+        <div class="sectionContainer">
+            <div class="controlContainer">
+                <input id="streamUrlInput2"></input>
+                <button onclick="playStream(2)">Play Stream</button>
+            </div>
+            <video id="video2" controls autoplay></video>
+        </div>
+    </div>
+
+    <div class="rowContainer">
+        <div class="sectionContainer">
+            <div class="controlContainer">
+                <input id="streamUrlInput3"></input>
+                <button onclick="playStream(3)">Play Stream</button>
+            </div>
+            <video id="video3" controls autoplay></video>
+        </div>
+
+        <div class="sectionContainer">
+            <div class="controlContainer">
+                <input id="streamUrlInput4"></input>
+                <button onclick="playStream(4)">Play Stream</button>
+            </div>
+            <video id="video4" controls autoplay></video>
+        </div>
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
-        // URL of the m3u8 stream
-        const streamUrl = 'https://vz-cea98c59-23c.b-cdn.net/c309129c-27b6-4e43-8254-62a15c77c5ee/playlist.m3u8?v=1683126052';
-        
-        
-        const video = document.getElementById('video');
 
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(streamUrl);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play();
-            });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = streamUrl;
-            video.addEventListener('loadedmetadata', function() {
-                video.play();
-            });
-        } else {
-            alert('Your browser does not support HLS playback.');
+
+
+        function resizePlayers() {
+            for (var i = 1; i <= 4; i++) {
+                const video = document.getElementById('video' + i);
+                const streamUrlInput = document.getElementById('streamUrlInput' + i);
+
+                const parentHeight = video.parentElement.clientHeight;
+                video.style.height = parentHeight - 22 + 'px';
+
+                const parentWidth = video.parentElement.clientWidth;
+                video.style.width = parentWidth + 'px';
+            }
+            console.log("Resized");
         }
+
+        function playStream(player) {
+            const video = document.getElementById('video' + player);
+            const streamUrlInput = document.getElementById('streamUrlInput' + player);
+
+            video.pause();
+            const streamUrl = streamUrlInput.value;
+
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', function () {
+                    video.play();
+                });
+            } else {
+                alert('Your browser does not support HLS playback.');
+            }
+        }
+
+        function playAudioFor(video) {
+            for (let i = 1; i <= 4; i++) {
+                const videoEl = document.getElementById('video' + i);
+                videoEl.muted = true;
+
+                if (i === video) {
+                    videoEl.muted = false;
+                }
+            }
+        }
+
+        const keysPressed = {};
+        function keyEvent(event) {
+            keysPressed[event.key] = event.type === 'keydown';
+            if (keysPressed['Shift'] && keysPressed['R']) {
+                resizePlayers();
+            }
+        }
+
+        document.onresize = resizePlayers;
+        document.onkeydown = keyEvent;
+        document.onkeyup = keyEvent;
+        resizePlayers();
+
+        for (let i = 1; i <= 4; i++) {
+            const video = document.getElementById('video' + i);
+            const streamUrlInput = document.getElementById('streamUrlInput' + i);
+            streamUrlInput.value = 'https://vz-cea98c59-23c.b-cdn.net/c309129c-27b6-4e43-8254-62a15c77c5ee/playlist.m3u8?v=1683126052';
+            video.onmouseover = ((val) => {
+                return () => {
+                    playAudioFor(val);
+                }
+            })(i);
+        }
+
     </script>
 </body>
+
 </html>
